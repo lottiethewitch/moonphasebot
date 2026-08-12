@@ -69,21 +69,12 @@
               	cat <<EOF
               Warning: Python version mismatch: [$venvVersion (venv)] != [${python.version}]
                        Delete '$venvDir' and reload to rebuild for version ${python.version}
-
-			  
-			  if [ -f .envar ]; then 
-				export BSKY_KEY="$(cat .envar)"
-			  else 
-				echo "WARNING: NO KEY SET"
-			  fi
-
-
               EOF
               }
-
+              while read LINE; do export "$LINE"; done < ./.envar
               venvVersionWarn
-            '';
-
+              '';
+              
             packages =
               (with python.pkgs; [
                 venvShellHook
