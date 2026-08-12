@@ -62,14 +62,6 @@ class Moon:
                 self.lastMajorPhase = data["lastMajorPhase"]
                 f.close()
 
-
-def getClient():
-    client = Client()
-    password = os.getenv("BSKY_KEY")
-    client.login('moonphasebot.bsky.social', password)
-    return client
-
-
 def makePost(moon: Moon, client: Client):
 
     image = urllib.request.urlretrieve(moon.imageUrl, "moon.jpg")
@@ -115,8 +107,7 @@ def getMoonInfo():
     data = requests.get(f"https://svs.gsfc.nasa.gov/api/dialamoon/{date}")
     moonData = data.json() 
     
-    moon = Moon()
-    moon.__init__(
+    moon = Moon.__init__(
         age = moonData["age"],
         phasePercentage = moonData["phasePercentage"],
         imageUrl = moonData["image.url"],
@@ -126,7 +117,12 @@ def getMoonInfo():
 
 
 def main():
-    client = getClient()
+    
+    client = Client()
+    password = os.getenv("BSKY_KEY")
+    client.login('moonphasebot.bsky.social', password)
+    
     moon = getMoonInfo()
-    client.post(makePost(moon))
+    client.send_post(makePost(moon))
 
+main()
