@@ -1,117 +1,105 @@
 from atproto import Client
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timezone
+from flask import session
 import json
 import os
 from PIL import Image
 import requests
 import urllib.request
 
+pds_url = "moonphasebot.bsky.social"
+IMAGE_MIMETYPE = "image/jpg"
+
+# Moon Phases
+GIBBOUS = "Gibbous"
+CRESCENT = "Crescent"
+FULL_MOON = "Full Moon"
+NEW_MOON = "New Moon"
+HALF_MOON = "Half Moon"
+
+WAXING = "Waxing"
+WANING = "Waning"
+
+# API Keywords
+AGE = "age"
+PHASE = "phase"
+IMAGE = "image"
+URL = "url"
+
+
+
 class Moon:
     age: float
     phasePercentage: float
     imageUrl: str
     lastMajorPhase : str
+
     
     
-    def __init__(age, phasePercentage, imageUrl):
+    def __init__(self, age, phasePercentage, imageUrl, lastMajorPhase):
         self.age = age
         self.phasePercentage = phasePercentage
         self.imageUrl = imageUrl
-        self.lastMajorPhase = getLastMajorPhase()
+        self.lastMajorPhase = lastMajorPhase
     
     def saveToFile(data):
         with open("phase.json", "w") as file:
             json.dump(data, file)
             file.close()
 
-    def waxWane(): 
-        if (lastMajorPhase == "NEW" and phasePercentage < 99 and phasePercentage > 1):
-            return "Waxing"
-        elif (lastMajorPhase == "FULL" and phasePercentage < 99 and phasePercentage > 1):
-            return "Waning"
+    def waxWane(self): 
+        if (lastMajorPhase == NEW_MOON and phasePercentage < 99 and phasePercentage > 1):
+            return WAXING
+        elif (lastMajorPhase == FULL_MOON and phasePercentage < 99 and phasePercentage > 1):
+            return WANING
 
-    def moonType():
+    def moonType(self):
         if (self.phasePercentage > 51 and self.phasePercentage < 99):
-            return "Gibbous"
+            return GIBBOUS
         elif (self.phasePercentage < 49 and self.phasePercentage > 1):
-            return "Crescent"
+            return CRESCENT
         elif (phasePercentage > 99):
-            return "Full Moon"
+            return FULL_MOON
         elif (phasePercentage < 1): 
-            return "New Moon"
+            return NEW_MOON
         else: 
-            return "Half Moon"
+            return HALF_MOON
 
-    # Used to track waxing vs. waning as this is not available/easily parsed from NASA dataset
-    def getLastMajorPhase():
-        if self.phasePercentage > 99:
-            self.lastMajorPhase = "FULL"
-            data = {
-                "lastMajorPhase" : "FULL"
-            }
-            saveToFile(data)
-        elif self.phasePercentage < 1:
-            self.lastMajorPhase = "NEW"
-            data = {
-                "lastMajorPhase" : "NEW"
-            }
-        else:
-            with open("phase.json", "r") as f:
-                data = json.load(f)
-                self.lastMajorPhase = data["lastMajorPhase"]
-                f.close()
+    
 
-def makePost(moon: Moon, client: Client):
+# Used to track waxing vs. waning as this is not available/easily parsed from NASA dataset
 
-    image = urllib.request.urlretrieve(moon.imageUrl, "moon.jpg")
-    with Image.open(r"moon.jpg") as im:
-        img_bytes = im.read()
-        width, height = im.size
-    # this size limit is specified in the app.bsky.embed.images lexicon
-    if len(img_bytes) > 2000000:
-        raise Exception(
-            f"image file size too large. 2000000 bytes maximum, got: {len(img_bytes)}"
-        )
+def getLastMajorPhase(phasePercentage: float):
+    lastMajorPhase = ""
 
-    resp = requests.post(
-        pds_url + "/xrpc/com.atproto.repo.uploadBlob",
-        headers={
-            "Content-Type": IMAGE_MIMETYPE,
-            "Authorization": "Bearer " + session["accessJwt"],
-        },
-        data=img_bytes,
-    )
-    resp.raise_for_status()
-    blob = resp.json()["blob"]
+    if phasePercentage > 99:
+        lastMajorPhase = FULL_MOON
+        data = {
+            "lastMajorPhase" : FULL_MOON
+        }
+        saveToFile(data)
+    elif phasePercentage < 1:
+        lastMajorPhase = NEW_MOON
+        data = {
+            "lastMajorPhase" : NEW_MOON
+        }
+    else:
+        with open("phase.json", "r") as f:
+            data = json.load(f)
+            lastMajorPhase = data["lastMajorPhase"]
+            f.close()
 
-    post["embed"] = {
-        "$type": "app.bsky.feed.post",
-        "text": f"{moon.waxWane} {moon.moonType} \n phase percentage: {moon.phasePercentage} \n age: {moon.age}",
-        "createdAt": now,
-        "images": [{
-            "alt": f"{moon.waxWane} {moon.moonType} as of right now",
-            "image": blob,
-            "aspectRatio": {
-                "width": width,
-                "height": height
-            }
-        }]
-    }
-
-    return post
+    return lastMajorPhase
 
 
 def getMoonInfo():
     date = datetime.now().strftime('%Y-%m-%d'+'T%H:%M')
     data = requests.get(f"https://svs.gsfc.nasa.gov/api/dialamoon/{date}")
-    moonData = data.json() 
+    moonData = data.json()
+    lastMajorPhase = getLastMajorPhase(moonData[PHASE])
     
-    moon = Moon.__init__(
-        age = moonData["age"],
-        phasePercentage = moonData["phasePercentage"],
-        imageUrl = moonData["image.url"],
-    )
+    moon = Moon(moonData[AGE], moonData[PHASE], moonData[IMAGE][URL], lastMajorPhase)
 
     return moon
 
@@ -120,9 +108,25 @@ def main():
     
     client = Client()
     password = os.getenv("BSKY_KEY")
-    client.login('moonphasebot.bsky.social', password)
-    
+    client.login(pds_url, password)
     moon = getMoonInfo()
-    client.send_post(makePost(moon))
+
+    wax_wane = moon.waxWane
+    moon_type = moon.moonType
+
+    image = urllib.request.urlretrieve(moon.imageUrl, "moon.jpg")
+    with open('moon.jpg', 'rb') as f:
+        img_data = f.read()
+
+    post_text = "{} {} \n phase percentage: {} \n age: {}".format(wax_wane, moon_type, moon.phasePercentage, moon.age)    
+
+    alt_text = "{} {} at {}%".format(wax_wane, moon_type, moon.phasePercentage)
+
+    try:
+        client.send_image(text=post_text, image=img_data, image_alt=alt_text)
+        print("Post sent successfully")
+    except Exception as e:
+        print(f"Error has occursed with poasting. Please fix. Detailed as {e}")
+
 
 main()
