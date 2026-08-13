@@ -20,7 +20,7 @@ def main():
     moon_type = moon.moonType()
 
  
-    with open('moon.jpg', 'rb') as f:
+    with open('../moon.jpg', 'rb') as f:
         img_data = f.read()
 
     post_text = "Phase: {} {} \nVisible Percentage: {} \nAge: {}".format(wax_wane, moon_type, moon.phasePercentage, moon.age)    

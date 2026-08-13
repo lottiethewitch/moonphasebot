@@ -88,7 +88,7 @@ def getMoonInfo():
     moonData = data.json()
     
     moon = Moon(moonData[AGE], moonData[PHASE], moonData[IMAGE][URL])
-    saveImage(moon.imageUrl, "moon.jpg")
+    saveImage(moon.imageUrl, "../moon.jpg")
 
     return moon
 
