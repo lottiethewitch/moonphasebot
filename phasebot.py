@@ -1,13 +1,18 @@
 from atproto import Client
+from dataclasses import dataclass
+from datetime import datetime, timezone
+from flask import session
 import json
 import os
 from PIL import Image
 import requests
+import urllib.request
 
-# local 
 import moon
 
 pds_url = "moonphasebot.bsky.social"
+IMAGE_MIMETYPE = "image/jpg"
+
 
 def main():
     
@@ -19,7 +24,7 @@ def main():
     wax_wane = moon.waxWane()
     moon_type = moon.moonType()
 
- 
+    image = urllib.request.urlretrieve(moon.imageUrl, "moon.jpg")
     with open('moon.jpg', 'rb') as f:
         img_data = f.read()
 
@@ -27,7 +32,6 @@ def main():
 
     alt_text = "{} {} at {}%".format(wax_wane, moon_type, moon.phasePercentage)
 
-    
     try:
         client.send_image(text=post_text, image=img_data, image_alt=alt_text)
         print("Post sent successfully")
