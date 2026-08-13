@@ -34,8 +34,6 @@ class Moon:
     phasePercentage: float
     imageUrl: str
     lastMajorPhase : str
-
-    
     
     def __init__(self, age, phasePercentage, imageUrl, lastMajorPhase):
         self.age = age
@@ -49,24 +47,26 @@ class Moon:
             file.close()
 
     def waxWane(self): 
-        if (lastMajorPhase == NEW_MOON and phasePercentage < 99 and phasePercentage > 1):
+        if (self.lastMajorPhase == NEW_MOON and self.phasePercentage < 99 and self.phasePercentage > 1):
             return WAXING
-        elif (lastMajorPhase == FULL_MOON and phasePercentage < 99 and phasePercentage > 1):
+        elif (self.lastMajorPhase == FULL_MOON and self.phasePercentage < 99 and self.phasePercentage > 1):
             return WANING
+        else: 
+            return ""
 
     def moonType(self):
         if (self.phasePercentage > 51 and self.phasePercentage < 99):
             return GIBBOUS
         elif (self.phasePercentage < 49 and self.phasePercentage > 1):
             return CRESCENT
-        elif (phasePercentage > 99):
+        elif (self.phasePercentage > 99):
             return FULL_MOON
-        elif (phasePercentage < 1): 
+        elif (self.phasePercentage < 1): 
             return NEW_MOON
         else: 
             return HALF_MOON
 
-    
+
 
 # Used to track waxing vs. waning as this is not available/easily parsed from NASA dataset
 
@@ -111,14 +111,14 @@ def main():
     client.login(pds_url, password)
     moon = getMoonInfo()
 
-    wax_wane = moon.waxWane
-    moon_type = moon.moonType
+    wax_wane = moon.waxWane()
+    moon_type = moon.moonType()
 
     image = urllib.request.urlretrieve(moon.imageUrl, "moon.jpg")
     with open('moon.jpg', 'rb') as f:
         img_data = f.read()
 
-    post_text = "{} {} \n phase percentage: {} \n age: {}".format(wax_wane, moon_type, moon.phasePercentage, moon.age)    
+    post_text = "Phase: {} {} \nVisible Percentage: {} \nAge: {}".format(wax_wane, moon_type, moon.phasePercentage, moon.age)    
 
     alt_text = "{} {} at {}%".format(wax_wane, moon_type, moon.phasePercentage)
 

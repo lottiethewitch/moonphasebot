@@ -1,9 +1,30 @@
 import json
-import phasebot
 import requests
 import unittest
 from datetime import datetime
 
+
+
+pds_url = "moonphasebot.bsky.social"
+IMAGE_MIMETYPE = "image/jpg"
+
+# Moon Phases
+GIBBOUS = "Gibbous"
+CRESCENT = "Crescent"
+FULL_MOON = "Full Moon"
+NEW_MOON = "New Moon"
+HALF_MOON = "Half Moon"
+
+WAXING = "Waxing"
+WANING = "Waning"
+
+# API Keywords
+AGE = "age"
+PHASE = "phase"
+IMAGE = "image"
+URL = "url"
+
+#sue me i tested this manually
 
 class Moon:
     age: float
@@ -25,19 +46,21 @@ class Moon:
             file.close()
 
     def waxWane(self): 
-        if (lastMajorPhase == NEW_MOON and phasePercentage < 99 and phasePercentage > 1):
+        if (self.lastMajorPhase == NEW_MOON and self.phasePercentage < 99 and self.phasePercentage > 1):
             return WAXING
-        elif (lastMajorPhase == FULL_MOON and phasePercentage < 99 and phasePercentage > 1):
+        elif (self.lastMajorPhase == FULL_MOON and self.phasePercentage < 99 and self.phasePercentage > 1):
             return WANING
+        else: 
+            return ""
 
     def moonType(self):
         if (self.phasePercentage > 51 and self.phasePercentage < 99):
             return GIBBOUS
         elif (self.phasePercentage < 49 and self.phasePercentage > 1):
             return CRESCENT
-        elif (phasePercentage > 99):
+        elif (self.phasePercentage > 99):
             return FULL_MOON
-        elif (phasePercentage < 1): 
+        elif (self.phasePercentage < 1): 
             return NEW_MOON
         else: 
             return HALF_MOON
@@ -80,4 +103,5 @@ def getMoonInfo():
 
 
 moon = getMoonInfo()
-print(moon.waxWane)
+print(moon.moonType())
+print(getLastMajorPhase(moon.phasePercentage))
