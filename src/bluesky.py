@@ -6,6 +6,7 @@ import requests
 
 # local 
 import moon
+from moon import getMoonInfo
 
 pds_url = "moonphasebot.bsky.social"
 

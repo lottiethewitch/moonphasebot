@@ -2,7 +2,7 @@ import json
 import requests
 from datetime import datetime, timezone
 
-import utils
+from utils import saveImage
 
 # Moon Phases
 GIBBOUS = "Gibbous"
@@ -19,6 +19,7 @@ AGE = "age"
 PHASE = "phase"
 IMAGE = "image"
 URL = "url"
+JSON_FILE = "../phase.json"
 
 
 
@@ -33,14 +34,15 @@ class Moon:
         self.imageUrl = imageUrl
     
     def saveToFile(data):
-        with open("phase.json", "w") as file:
+        with open(JSON_FILE, "w") as file:
             json.dump(data, file)
             file.close()
 
-    def waxWane(self): 
-        if (self.lastMajorPhase == NEW_MOON and self.phasePercentage < 99 and self.phasePercentage > 1):
+    def waxWane(self):
+        lastMajorPhase = self.getLastMajorPhase()
+        if (lastMajorPhase == NEW_MOON and self.phasePercentage < 99 and self.phasePercentage > 1):
             return WAXING
-        elif (self.lastMajorPhase == FULL_MOON and self.phasePercentage < 99 and self.phasePercentage > 1):
+        elif (lastMajorPhase == FULL_MOON and self.phasePercentage < 99 and self.phasePercentage > 1):
             return WANING
         else: 
             return ""
@@ -58,7 +60,7 @@ class Moon:
             return HALF_MOON
 
 
-    def getLastMajorPhase(phasePercentage: float):
+    def getLastMajorPhase(self):
         lastMajorPhase = ""
 
         if self.phasePercentage > 99:
@@ -73,7 +75,7 @@ class Moon:
                 "lastMajorPhase" : NEW_MOON
             }
         else:
-            with open("phase.json", "r") as f:
+            with open(JSON_FILE, "r") as f:
                 data = json.load(f)
                 lastMajorPhase = data["lastMajorPhase"]
                 f.close()
