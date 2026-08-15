@@ -19,7 +19,6 @@ AGE = "age"
 PHASE = "phase"
 IMAGE = "image"
 URL = "url"
-JSON_FILE = "../phase.json"
 
 
 
@@ -27,11 +26,13 @@ class Moon:
     age: float
     phasePercentage: float
     imageUrl: str
+    json_file: str
     
-    def __init__(self, age, phasePercentage, imageUrl):
+    def __init__(self, age, phasePercentage, imageUrl, json_file):
         self.age = age
         self.phasePercentage = phasePercentage
         self.imageUrl = imageUrl
+        self.json_file = json_file
     
     def saveToFile(data):
         with open(JSON_FILE, "w") as file:
@@ -84,12 +85,12 @@ class Moon:
 
 # API
 
-def getMoonInfo():
+def getMoonInfo(json_file):
     date = datetime.now().strftime('%Y-%m-%d'+'T%H:%M')
     data = requests.get(f"https://svs.gsfc.nasa.gov/api/dialamoon/{date}")
     moonData = data.json()
     
-    moon = Moon(moonData[AGE], moonData[PHASE], moonData[IMAGE][URL])
+    moon = Moon(moonData[AGE], moonData[PHASE], moonData[IMAGE][URL], json_file)
     saveImage(moon.imageUrl, "../moon.jpg")
 
     return moon

@@ -9,13 +9,14 @@ import moon
 from moon import getMoonInfo
 
 pds_url = "moonphasebot.bsky.social"
+JSON_FILE = "../phase.json"
 
 def main():
     
     client = Client()
     password = os.getenv("BSKY_KEY")
     client.login(pds_url, password)
-    moon = getMoonInfo()
+    moon = getMoonInfo(JSON_FILE)
 
     wax_wane = moon.waxWane()
     moon_type = moon.moonType()
