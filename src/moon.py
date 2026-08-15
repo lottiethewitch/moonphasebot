@@ -20,6 +20,8 @@ PHASE = "phase"
 IMAGE = "image"
 URL = "url"
 
+JSON_FILE = "../phase.json"
+
 
 
 class Moon:
